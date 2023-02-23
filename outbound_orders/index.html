@@ -7,7 +7,43 @@
   <title>Outbound Order Link Generator</title>
 </head>
 
-<body>
-  hi mom
+<body style="padding: 20px">
+  <p>Order Ids (can also inclue "O-") (Currently limited to 50)</p>
+  <textarea id="order_ids" style="width: 400px; height: 400px"></textarea>
+  <p><button id="generate">Generate Link</button> <button id="clear">Clear Orders</button></p>
+
+  <p>
+   <span id="output"></span>
+  </p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js" integrity="sha512-STof4xm1wgkfm7heWqFJVn58Hm3EtS31XFaagaa8VMReCXAkQnJZ+jEy8PCC/iT18dFy95WcExNHFTqLyp72eQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script type="text/javascript">
+    $(document).ready(() => {
+      const order_ids = $("#order_ids");
+
+      $("#clear").click(() => {
+        order_ids.val('');
+        return false;
+      });
+
+      $("#generate").click(() => {
+        url = 'https://app.flow.space/account/warehouses/outbound_orders?'
+        all_orders = order_ids.val().split(/\r?\n/);
+        query_param_list = [];
+        all_orders.forEach((oid) => {
+          if (oid.trim()) {
+            query_param_list.push(`order_ids[]=${oid.trim()}`)  
+          }
+        });
+        if (query_param_list.length && query_param_list.length <= 50) {
+          $("#output").html(
+            $("<a>Open Flowspace App</a>").attr('href', url + query_param_list.join('&')).attr('target', "_blank")
+          );
+        } else {
+          alert('Enter anywhere from 1-50 orders');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
