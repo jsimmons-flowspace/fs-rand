@@ -1,0 +1,75 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fetch LD Data</title>
+</head>
+
+<body style="padding: 20px">
+  <p>Shipment IDs</p>
+  <textarea id="shipment_ids" style="width: 200px; height: 200px"></textarea>
+  <p><button id="generate">Fetch Information</button> <button id="clear">Clear Shipments</button></p>
+
+  <p>
+   <textarea id="output_data" style="width: 1000px; height: 200px"></textarea>
+  </p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js" integrity="sha512-STof4xm1wgkfm7heWqFJVn58Hm3EtS31XFaagaa8VMReCXAkQnJZ+jEy8PCC/iT18dFy95WcExNHFTqLyp72eQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script type="text/javascript">
+    $(document).ready(() => {
+      const shipment_ids = $("#shipment_ids");
+
+      $("#clear").click(() => {
+        shipment_ids.val('');
+        return false;
+      });
+
+      $("#generate").click(async () => {
+        url = `https://tms.transplace.com/tracking/shipmentDetails?app=EMAIL-SMS&ts=${Date.now()}&shipmentId=`
+        const allShipments = shipment_ids.val().split(/\r?\n/);
+        const promises = [];
+        allShipments.forEach(async (shipment) => {
+          if (shipment.trim()) {
+            promises.push($.getJSON(url + shipment));
+          }
+        });
+        Promise.all(promises).then((responses) => {
+          const spreadsheetData = [];
+          responses.forEach(data => {
+            const values = [];
+            values.push('FS Order');
+            values.push(data.id);
+            values.push(data.shipmentReferences["PRIMARY REFERENCE"].join(","));
+            values.push(data.shipmentReferences["PRO NUMBER"].join(","));
+            values.push(`${data.scac} - ${data.modeProviderName}`);
+            values.push(data.modeType);
+            values.push(data.equipment);
+            values.push(data.status);
+
+            data.stops.forEach((stop) => {
+              if(stop.stopSeq === 1) {
+                values.push(`${stop.name} ${stop.city} ${stop.state} ${stop.postalCode}`);
+                values.push(stop.carrierEta);
+              }
+            });
+
+            data.stops.forEach((stop) => {
+              if(stop.stopType === 'DROPOFF') {
+                values.push(`${stop.name} ${stop.city} ${stop.state} ${stop.postalCode}`);
+                values.push(stop.carrierEta);
+                values.push(`${stop.apptEarliestDateTime} ${stop.apptLatestDateTime}`);
+              }
+            });
+            console.log(values.join("\t"));
+            spreadsheetData.push(values.join("\t"));
+          });
+          $("#output_data").val(spreadsheetData.join("\n"));  
+        });
+        
+      });
+    });
+  </script>
+</body>
+</html>
