@@ -59,7 +59,7 @@
               if(stop.stopType === 'DROPOFF') {
                 values.push(`${stop.name} ${stop.city} ${stop.state} ${stop.postalCode}`);
                 values.push(stop.carrierEta);
-                values.push(`${stop.apptEarliestDateTime} ${stop.apptLatestDateTime}`);
+                values.push(`${stop.apptEarliestDateTime} - ${stop.apptLatestDateTime}`);
               }
             });
             console.log(values.join("\t"));
